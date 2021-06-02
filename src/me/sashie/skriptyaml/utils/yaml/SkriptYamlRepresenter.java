@@ -23,10 +23,10 @@ import org.yaml.snakeyaml.representer.Representer;
 import ch.njol.skript.aliases.ItemType;
 import ch.njol.skript.util.Color;
 import ch.njol.skript.util.Date;
-import ch.njol.skript.util.Slot;
 import ch.njol.skript.util.Time;
 import ch.njol.skript.util.Timespan;
 import ch.njol.skript.util.WeatherType;
+import ch.njol.skript.util.slot.Slot;
 import me.sashie.skriptyaml.SkriptYaml;
 import me.sashie.skriptyaml.api.RepresentedClass;
 
@@ -143,8 +143,9 @@ public class SkriptYamlRepresenter extends Representer {
 		if (SkriptYaml.getInstance().getServerVersion() <= 12) {
 			try {
 				Class<?> baseRepresenterClass = Class.forName("org.yaml.snakeyaml.representer.BaseRepresenter");
-				//representMapping(Tag tag, Map<?, ?> mapping, Boolean flowStyle)
-				representMappingMethod = baseRepresenterClass.getDeclaredMethod("representMapping", Tag.class, Map.class, Boolean.class);
+				// representMapping(Tag tag, Map<?, ?> mapping, Boolean flowStyle)
+				representMappingMethod = baseRepresenterClass.getDeclaredMethod("representMapping", Tag.class,
+						Map.class, Boolean.class);
 				representMappingMethod.setAccessible(true);
 			} catch (SecurityException | ClassNotFoundException | NoSuchMethodException e) {
 				e.printStackTrace();
@@ -162,15 +163,16 @@ public class SkriptYamlRepresenter extends Representer {
 			return (T) representMapping(tag, mapping, FlowStyle.BLOCK);
 		} else {
 			T node = null;
-            try {
-    			node = (T) representMappingMethod.invoke(this, tag, mapping, null);
-            } catch (SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            	e.printStackTrace();
-            }
+			try {
+				node = (T) representMappingMethod.invoke(this, tag, mapping, null);
+			} catch (SecurityException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException e) {
+				e.printStackTrace();
+			}
 			return (T) node;
 		}
 	}
-	
+
 	private class RepresentSkriptItemType extends RepresentMap {
 		@Override
 		public Node representData(Object data) {
@@ -186,18 +188,15 @@ public class SkriptYamlRepresenter extends Representer {
 		}
 	}
 
-	/* TODO eventually add support for different slot types
-	private class RepresentInventorySlot extends RepresentMap {
-		@Override
-		public Node representData(Object data) {
-		Map<String, Object> out = new LinkedHashMap<String, Object>();
-			InventorySlot slot = (InventorySlot) data;
-			out.put("index", slot.getIndex());
-			out.put("item", slot.getItem());
-			return representMapping(new Tag("!skriptclass"), out, null);
-		}
-	}
-	*/
+	/*
+	 * TODO eventually add support for different slot types private class
+	 * RepresentInventorySlot extends RepresentMap {
+	 * 
+	 * @Override public Node representData(Object data) { Map<String, Object> out =
+	 * new LinkedHashMap<String, Object>(); InventorySlot slot = (InventorySlot)
+	 * data; out.put("index", slot.getIndex()); out.put("item", slot.getItem());
+	 * return representMapping(new Tag("!skriptclass"), out, null); } }
+	 */
 
 	private class RepresentSkriptDate implements Represent {
 		@Override

@@ -10,7 +10,6 @@ import javax.annotation.Nullable;
 
 import org.bukkit.event.Event;
 
-import ch.njol.skript.ScriptLoader;
 import ch.njol.skript.Skript;
 import ch.njol.skript.classes.Converter;
 import ch.njol.skript.doc.Description;
@@ -21,6 +20,7 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.ExpressionType;
 import ch.njol.skript.lang.Loop;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.lang.parser.ParserInstance;
 import ch.njol.skript.lang.util.ConvertedExpression;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.log.SkriptLogger;
@@ -35,15 +35,13 @@ import me.sashie.skriptyaml.utils.StringUtil;
 
 @Name("Yaml Loop")
 @Description("The currently looped value of a yaml expression.")
-@Examples({"",
-		"loop yaml node keys \"node\" from \"config\":",
-		"	message yaml value loop-node from loop-id",
-		"loop yaml node list \"node\" from \"config\":",
-		"	message yaml value loop-node from loop-id"})
+@Examples({ "", "loop yaml node keys \"node\" from \"config\":", "	message yaml value loop-node from loop-id",
+		"loop yaml node list \"node\" from \"config\":", "	message yaml value loop-node from loop-id" })
 @Since("1.3")
 public class ExprLoopYaml extends SimpleExpression<Object> {
 	static {
-		Skript.registerExpression(ExprLoopYaml.class, Object.class, ExpressionType.SIMPLE, "[the] loop-(1¦id|2¦val|3¦list|4¦node|5¦key|6¦subnodekey[s]|7¦iteration)");
+		Skript.registerExpression(ExprLoopYaml.class, Object.class, ExpressionType.SIMPLE,
+				"[the] loop-(1¦id|2¦val|3¦list|4¦node|5¦key|6¦subnodekey[s]|7¦iteration)");
 	}
 
 	public static enum LoopState {
@@ -60,7 +58,8 @@ public class ExprLoopYaml extends SimpleExpression<Object> {
 	boolean isYamlLoop = false;
 
 	@Override
-	public boolean init(final Expression<?>[] vars, final int matchedPattern, final Kleenean isDelayed, final ParseResult parser) {
+	public boolean init(final Expression<?>[] vars, final int matchedPattern, final Kleenean isDelayed,
+			final ParseResult parser) {
 		name = parser.expr;
 
 		String s = name.split("-")[1];
@@ -76,14 +75,16 @@ public class ExprLoopYaml extends SimpleExpression<Object> {
 		int j = 1;
 		Loop loop = null;
 
-		for (final Loop l : ScriptLoader.currentLoops) {
+		for (final Loop l : ParserInstance.get().getCurrentLoops()) {
 			if (l.getLoopedExpression() instanceof ExprYaml) {
 				if (j < i) {
 					j++;
 					continue;
 				}
 				if (loop != null) {
-					//Skript.error("There are multiple loops that match loop-" + s + ". Use loop-" + s + "-1/2/3/etc. to specify which loop's value you want.", ErrorQuality.SEMANTIC_ERROR);
+					// Skript.error("There are multiple loops that match loop-" + s + ". Use loop-"
+					// + s + "-1/2/3/etc. to specify which loop's value you want.",
+					// ErrorQuality.SEMANTIC_ERROR);
 					return false;
 				}
 				loop = l;
@@ -93,7 +94,8 @@ public class ExprLoopYaml extends SimpleExpression<Object> {
 		}
 
 		if (loop == null) {
-			//Skript.error("There's no loop that matches 'loop-" + s + "'", ErrorQuality.SEMANTIC_ERROR);
+			// Skript.error("There's no loop that matches 'loop-" + s + "'",
+			// ErrorQuality.SEMANTIC_ERROR);
 			return false;
 		}
 
@@ -125,7 +127,9 @@ public class ExprLoopYaml extends SimpleExpression<Object> {
 			}
 			isYamlLoop = true;
 		} else {
-			SkriptYaml.error("A 'loop-" + s + "' can only be used in a yaml expression loop ie. 'loop yaml node keys \"node\" from \"config\"'" + getNodeMsg());
+			SkriptYaml.error("A 'loop-" + s
+					+ "' can only be used in a yaml expression loop ie. 'loop yaml node keys \"node\" from \"config\"'"
+					+ getNodeMsg());
 			return false;
 		}
 
@@ -134,7 +138,8 @@ public class ExprLoopYaml extends SimpleExpression<Object> {
 	}
 
 	private boolean loopStateListError(String s) {
-		//Skript.error("There's no 'loop-" + s + "' in a yaml list", ErrorQuality.SEMANTIC_ERROR);
+		// Skript.error("There's no 'loop-" + s + "' in a yaml list",
+		// ErrorQuality.SEMANTIC_ERROR);
 		SkriptYaml.error("There's no 'loop-" + s + "' in a yaml list " + getNodeMsg());
 		return false;
 	}
@@ -157,13 +162,15 @@ public class ExprLoopYaml extends SimpleExpression<Object> {
 	@Nullable
 	protected <R> ConvertedExpression<Object, ? extends R> getConvertedExpr(final Class<R>... to) {
 		if (isYamlLoop && loopState != LoopState.INDEX) {
-			return new ConvertedExpression<>(this, (Class<R>) Utils.getSuperType(to), new Converter<Object, R>() {
-				@Override
-				@Nullable
-				public R convert(final Object o) {
-					return Converters.convert(o, to);
-				}
-			});
+			return new ConvertedExpression<Object, R>(this, (Class<R>) Utils.getSuperType(to),
+					new Converter.ConverterInfo<Object, R>(Object.class, (Class<R>) Utils.getSuperType(to),
+							new Converter<Object, R>() {
+								@Override
+								@Nullable
+								public R convert(final Object o) {
+									return Converters.convert(o, to);
+								}
+							}, 1));
 		} else {
 			return super.getConvertedExpr(to);
 		}
@@ -188,42 +195,42 @@ public class ExprLoopYaml extends SimpleExpression<Object> {
 				return null;
 
 			switch (loopState) {
-				case INDEX:
-					return new Number[] {getIndex()};
-				case ID:
-					return new String[] {yamlExpr.getId(e)};	
-				case VALUE:
-					if (yamlState.equals(YamlState.LIST))
-						return new Object[] {current};
-					String n = getCurrentNode(current, yamlExpr.getNode(e));
-					if (n == null)
-						return null;
-					return yamlExpr.get(e, n, YamlState.VALUE);
-				case LIST:
-					String n2 = getCurrentNode(current, yamlExpr.getNode(e));
-					if (n2 == null)
-						return null;
-					return yamlExpr.get(e, n2, YamlState.LIST);
-				case NODE:
-					if (yamlState.equals(YamlState.NODE_KEYS))
-						return new String[] {StringUtil.addLastNodeSeperator(yamlExpr.getNode(e)) + current};
-					else if (yamlState.equals(YamlState.NODES))
-						return new String[] {current.toString()};
-				case NODE_KEY:
-					if (yamlState.equals(YamlState.NODE_KEYS))
-						return new String[] {current.toString()};
-					else if (yamlState.equals(YamlState.NODES))
-						return new String[] {StringUtil.stripBeforeLastNode(current.toString())};
-				case SUB_NODE_KEYS:
-					String n3 = getCurrentNode(current, yamlExpr.getNode(e));
-					if (n3 == null)
-						return null;
-					Object[] objects = yamlExpr.get(e, n3);
-					if (objects == null)
-						return null;
-					return objects;
-				default:
-					break;
+			case INDEX:
+				return new Number[] { getIndex() };
+			case ID:
+				return new String[] { yamlExpr.getId(e) };
+			case VALUE:
+				if (yamlState.equals(YamlState.LIST))
+					return new Object[] { current };
+				String n = getCurrentNode(current, yamlExpr.getNode(e));
+				if (n == null)
+					return null;
+				return yamlExpr.get(e, n, YamlState.VALUE);
+			case LIST:
+				String n2 = getCurrentNode(current, yamlExpr.getNode(e));
+				if (n2 == null)
+					return null;
+				return yamlExpr.get(e, n2, YamlState.LIST);
+			case NODE:
+				if (yamlState.equals(YamlState.NODE_KEYS))
+					return new String[] { StringUtil.addLastNodeSeperator(yamlExpr.getNode(e)) + current };
+				else if (yamlState.equals(YamlState.NODES))
+					return new String[] { current.toString() };
+			case NODE_KEY:
+				if (yamlState.equals(YamlState.NODE_KEYS))
+					return new String[] { current.toString() };
+				else if (yamlState.equals(YamlState.NODES))
+					return new String[] { StringUtil.stripBeforeLastNode(current.toString()) };
+			case SUB_NODE_KEYS:
+				String n3 = getCurrentNode(current, yamlExpr.getNode(e));
+				if (n3 == null)
+					return null;
+				Object[] objects = yamlExpr.get(e, n3);
+				if (objects == null)
+					return null;
+				return objects;
+			default:
+				break;
 			}
 		}
 		return null;
@@ -255,13 +262,13 @@ public class ExprLoopYaml extends SimpleExpression<Object> {
 	}
 
 	@Override
-	public String toString(final @Nullable Event e, final boolean debug) {	//TODO
+	public String toString(final @Nullable Event e, final boolean debug) { // TODO
 		if (e == null)
 			return name;
 		if (isYamlLoop) {
 			final Object current = loop.getCurrent(e);
 			Object[] objects = ((ExprYaml<?>) loop.getLoopedExpression()).get(e);
-			
+
 			if (current == null || objects == null)
 				return Classes.getDebugMessage(null);
 

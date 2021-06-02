@@ -19,7 +19,7 @@ import org.yaml.snakeyaml.nodes.Node;
 import org.yaml.snakeyaml.nodes.ScalarNode;
 import org.yaml.snakeyaml.nodes.Tag;
 
-import ch.njol.skript.util.Color;
+import ch.njol.skript.util.ColorRGB;
 import ch.njol.skript.util.Date;
 import ch.njol.skript.util.Time;
 import ch.njol.skript.util.Timespan;
@@ -33,9 +33,9 @@ public class SkriptYamlConstructor extends SafeConstructor {
 
 		this.yamlConstructors.put(new Tag("!vector"), new ConstructVector());
 		this.yamlConstructors.put(new Tag("!location"), new ConstructLocation());
-		
+
 		this.yamlConstructors.put(new Tag("!skriptdate"), new ConstructSkriptDate());
-		//this.yamlConstructors.put(Tag.TIMESTAMP, new ConstructSkriptDate());
+		// this.yamlConstructors.put(Tag.TIMESTAMP, new ConstructSkriptDate());
 		this.yamlConstructors.put(new Tag("!skripttime"), new ConstructSkriptTime());
 		this.yamlConstructors.put(new Tag("!skripttimespan"), new ConstructSkriptTimespan());
 		this.yamlConstructors.put(new Tag("!skriptcolor"), new ConstructSkriptColor());
@@ -43,18 +43,16 @@ public class SkriptYamlConstructor extends SafeConstructor {
 
 		this.yamlConstructors.put(Tag.MAP, new ConstructCustomObject());
 	}
-	
+
 	public void register(String tag, ConstructedClass<?> cc) {
 		this.yamlConstructors.put(new Tag("!" + tag), cc);
 	}
-	
-/*
-	public Map<Object, Object> constructMapping(MappingNode node) {
-		Map<Object, Object> mapping = this.newMap(node);
-		this.constructMapping2ndStep(node, mapping);
-		return mapping;
-	}
-*/
+
+	/*
+	 * public Map<Object, Object> constructMapping(MappingNode node) { Map<Object,
+	 * Object> mapping = this.newMap(node); this.constructMapping2ndStep(node,
+	 * mapping); return mapping; }
+	 */
 	public Map<Object, Object> constructMap(MappingNode node) {
 		return constructMapping(node);
 	}
@@ -205,7 +203,7 @@ public class SkriptYamlConstructor extends SafeConstructor {
 				calendar.set(Calendar.MINUTE, Integer.parseInt(min_s));
 				calendar.set(Calendar.SECOND, sec_s);
 				calendar.set(Calendar.MILLISECOND, usec);
-				
+
 				return new Date(calendar.getTime().getTime());
 			}
 		}
@@ -234,7 +232,7 @@ public class SkriptYamlConstructor extends SafeConstructor {
 		public Object construct(Node node) {
 			ScalarNode scalar = (ScalarNode) node;
 			String nodeValue = scalar.getValue();
-			return Color.byName(nodeValue);
+			return ColorRGB.fromString(nodeValue);
 		}
 	}
 

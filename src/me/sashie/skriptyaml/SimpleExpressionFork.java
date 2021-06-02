@@ -19,7 +19,6 @@
  */
 package me.sashie.skriptyaml;
 
-import ch.njol.skript.ScriptLoader;
 import ch.njol.skript.Skript;
 import ch.njol.skript.SkriptAPIException;
 import ch.njol.skript.classes.Changer;
@@ -44,19 +43,22 @@ import java.util.Iterator;
 import javax.annotation.Nullable;
 
 /**
- * An implementation of the {@link Expression} interface. You should usually extend this class to make a new expression.
+ * An implementation of the {@link Expression} interface. You should usually
+ * extend this class to make a new expression.
  * 
- * Forked to provide backwards compatibility with older skript versions ie. dev25
+ * Forked to provide backwards compatibility with older skript versions ie.
+ * dev25
  * 
  * @see Skript#registerExpression(Class, Class, ExpressionType, String...)
  * @author Peter Güttinger
  */
 public abstract class SimpleExpressionFork<T> implements Expression<T> {
-	
+
 	private int time = 0;
 
-	protected SimpleExpressionFork() {}
-	
+	protected SimpleExpressionFork() {
+	}
+
 	@Override
 	@Nullable
 	public final T getSingle(final Event e) {
@@ -67,11 +69,12 @@ public abstract class SimpleExpressionFork<T> implements Expression<T> {
 			throw new SkriptAPIException("Call to getSingle() on a non-single expression");
 		return all[0];
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 * <p>
-	 * Unlike {@link #get(Event)} you have to make sure that the this method's returned array is neither null nor contains null elements.
+	 * Unlike {@link #get(Event)} you have to make sure that the this method's
+	 * returned array is neither null nor contains null elements.
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
@@ -98,7 +101,7 @@ public abstract class SimpleExpressionFork<T> implements Expression<T> {
 				r[i++] = t;
 		return r;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public final T[] getArray(final Event e) {
@@ -110,12 +113,12 @@ public abstract class SimpleExpressionFork<T> implements Expression<T> {
 		}
 		if (all.length == 0)
 			return all;
-		
+
 		int numNonNull = 0;
 		for (final T t : all)
 			if (t != null)
 				numNonNull++;
-		
+
 		if (!getAnd()) {
 			if (all.length == 1 && all[0] != null)
 				return all;
@@ -132,7 +135,7 @@ public abstract class SimpleExpressionFork<T> implements Expression<T> {
 			}
 			assert false;
 		}
-		
+
 		if (numNonNull == all.length)
 			return all;
 		final T[] r = (T[]) Array.newInstance(getReturnType(), numNonNull);
@@ -143,29 +146,31 @@ public abstract class SimpleExpressionFork<T> implements Expression<T> {
 				r[i++] = t;
 		return r;
 	}
-	
+
 	/**
 	 * This is the internal method to get an expression's values.<br>
-	 * To get the expression's value from the outside use {@link #getSingle(Event)} or {@link #getArray(Event)}.
+	 * To get the expression's value from the outside use {@link #getSingle(Event)}
+	 * or {@link #getArray(Event)}.
 	 * 
 	 * @param e The event
 	 * @return An array of values for this event. May not contain nulls.
 	 */
 	@Nullable
 	protected abstract T[] get(Event e);
-	
+
 	@Override
 	public final boolean check(final Event e, final Checker<? super T> c) {
 		return check(e, c, false);
 	}
-	
+
 	@Override
 	public final boolean check(final Event e, final Checker<? super T> c, final boolean negated) {
 		return check(get(e), c, negated, getAnd());
 	}
-	
+
 	// TODO return a kleenean (UNKNOWN if 'all' is null or empty)
-	public final static <T> boolean check(final @Nullable T[] all, final Checker<? super T> c, final boolean invert, final boolean and) {
+	public final static <T> boolean check(final @Nullable T[] all, final Checker<? super T> c, final boolean invert,
+			final boolean and) {
 		if (all == null)
 			return false;
 		boolean hasElement = false;
@@ -183,29 +188,35 @@ public abstract class SimpleExpressionFork<T> implements Expression<T> {
 			return false;
 		return invert ^ and;
 	}
-	
+
 	/**
-	 * Converts this expression to another type. Unless the expression is special, the default implementation is sufficient.
+	 * Converts this expression to another type. Unless the expression is special,
+	 * the default implementation is sufficient.
 	 * <p>
-	 * This method is never called with a supertype of the return type of this expression, or the return type itself.
+	 * This method is never called with a supertype of the return type of this
+	 * expression, or the return type itself.
 	 * 
 	 * @param to The desired return type of the returned expression
-	 * @return Expression with the desired return type or null if it can't be converted to the given type
+	 * @return Expression with the desired return type or null if it can't be
+	 *         converted to the given type
 	 * @see Expression#getConvertedExpression(Class...)
 	 * @see ConvertedExpression#newInstance(Expression, Class...)
 	 * @see Converter
 	 */
 	@Nullable
-	protected <R> ConvertedExpression<T, ? extends R> getConvertedExpr(final Class<R>... to) {
+	protected <R> ConvertedExpression<T, ? extends R> getConvertedExpr(
+			@SuppressWarnings("unchecked") final Class<R>... to) {
 		assert !CollectionUtils.containsSuperclass(to, getReturnType());
 		return ConvertedExpression.newInstance(this, to);
 	}
 
 	/**
-	 * Usually, you want to override {@link SimpleExpression#getConvertedExpr(Class[])}.
-	 * However, it may be useful to override this method if you have an expression with a return
-	 * type that is unknown until runtime (like variables). Usually, you'll be fine with just
-	 * the default implementation. This method is final on versions below INSERT VERSION.
+	 * Usually, you want to override
+	 * {@link SimpleExpression#getConvertedExpr(Class[])}. However, it may be useful
+	 * to override this method if you have an expression with a return type that is
+	 * unknown until runtime (like variables). Usually, you'll be fine with just the
+	 * default implementation. This method is final on versions below INSERT
+	 * VERSION.
 	 *
 	 * @param to The desired return type of the returned expression
 	 * @return The converted expression
@@ -218,10 +229,10 @@ public abstract class SimpleExpressionFork<T> implements Expression<T> {
 			return (Expression<? extends R>) this;
 		return this.getConvertedExpr(to);
 	}
-	
+
 	@Nullable
 	private ClassInfo<?> returnTypeInfo;
-	
+
 	@Override
 	@Nullable
 	public Class<?>[] acceptChange(final ChangeMode mode) {
@@ -233,7 +244,7 @@ public abstract class SimpleExpressionFork<T> implements Expression<T> {
 			return null;
 		return c.acceptChange(mode);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public void change(final Event e, final @Nullable Object[] delta, final ChangeMode mode) {
@@ -245,7 +256,7 @@ public abstract class SimpleExpressionFork<T> implements Expression<T> {
 			throw new UnsupportedOperationException();
 		((Changer<T>) c).change(getArray(e), delta, mode);
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 * <p>
@@ -256,20 +267,21 @@ public abstract class SimpleExpressionFork<T> implements Expression<T> {
 	 */
 	@Override
 	public boolean setTime(final int time) {
-		if (ScriptLoader.hasDelayBefore == Kleenean.TRUE && time != 0) {
+		if (ParserInstance.get().getHasDelayBefore() == Kleenean.TRUE && time != 0) {
 			Skript.error("Can't use time states after the event has already passed");
 			return false;
 		}
 		this.time = time;
 		return false;
 	}
-	
-	protected final boolean setTime(final int time, final Class<? extends Event> applicableEvent, final Expression<?>... mustbeDefaultVars) {
-		if (ScriptLoader.hasDelayBefore == Kleenean.TRUE && time != 0) {
+
+	protected final boolean setTime(final int time, final Class<? extends Event> applicableEvent,
+			final Expression<?>... mustbeDefaultVars) {
+		if (ParserInstance.get().getHasDelayBefore() == Kleenean.TRUE && time != 0) {
 			Skript.error("Can't use time states after the event has already passed");
 			return false;
 		}
-		if (!ScriptLoader.isCurrentEvent(applicableEvent))
+		if (!ParserInstance.get().isCurrentEvent(applicableEvent))
 			return false;
 		for (final Expression<?> var : mustbeDefaultVars) {
 			if (!var.isDefault()) {
@@ -279,59 +291,61 @@ public abstract class SimpleExpressionFork<T> implements Expression<T> {
 		this.time = time;
 		return true;
 	}
-	
-	protected final boolean setTime(final int time, final Expression<?> mustbeDefaultVar, final Class<? extends Event>... applicableEvents) {
-		if (ScriptLoader.hasDelayBefore == Kleenean.TRUE && time != 0) {
+
+	@SafeVarargs
+	protected final boolean setTime(final int time, final Expression<?> mustbeDefaultVar,
+			final Class<? extends Event>... applicableEvents) {
+		if (ParserInstance.get().getHasDelayBefore() == Kleenean.TRUE && time != 0) {
 			Skript.error("Can't use time states after the event has already passed");
 			return false;
 		}
 		if (!mustbeDefaultVar.isDefault())
 			return false;
 		for (final Class<? extends Event> e : applicableEvents) {
-			if (ScriptLoader.isCurrentEvent(e)) {
+			if (ParserInstance.get().isCurrentEvent(e)) {
 				this.time = time;
 				return true;
 			}
 		}
 		return false;
 	}
-	
+
 	@Override
 	public int getTime() {
 		return time;
 	}
-	
+
 	@Override
 	public boolean isDefault() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean isLoopOf(final String s) {
 		return false;
 	}
-	
+
 	@Override
 	@Nullable
 	public Iterator<? extends T> iterator(final Event e) {
 		return new ArrayIterator<T>(getArray(e));
 	}
-	
+
 	@Override
 	public String toString() {
 		return toString(null, false);
 	}
-	
+
 	@Override
 	public Expression<?> getSource() {
 		return this;
 	}
-	
+
 	@Override
 	public Expression<? extends T> simplify() {
 		return this;
 	}
-	
+
 	@Override
 	public boolean getAnd() {
 		return true;
@@ -341,5 +355,5 @@ public abstract class SimpleExpressionFork<T> implements Expression<T> {
 	 * Parser instance which is being used or was used to parse this element.
 	 */
 	protected ParserInstance pi;
-	
+
 }

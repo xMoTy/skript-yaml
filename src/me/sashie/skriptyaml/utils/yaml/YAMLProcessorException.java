@@ -24,7 +24,12 @@ package me.sashie.skriptyaml.utils.yaml;
  */
 public class YAMLProcessorException extends Exception {
 
-    public YAMLProcessorException() {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public YAMLProcessorException() {
         super();
     }
 

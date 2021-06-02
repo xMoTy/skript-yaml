@@ -34,19 +34,15 @@ import me.sashie.skriptyaml.utils.StringUtil;
 import me.sashie.skriptyaml.utils.yaml.YAMLNode;
 import me.sashie.skriptyaml.utils.yaml.YAMLProcessor;
 
+@SuppressWarnings("unchecked")
 @Name("YAML")
-@Description("Gets, sets, removes values/nodes etc.. of a cached yaml file" +
-		"\n  - Requires the id used/created from the load effect" +
-		"\n  - This expression does not save to file" +
-		"\n  - Lists accept list variables for input" +
-		"\n  - Using 'without string checks' optional is a tiny bit faster but doesn't check/convert strings for numbers or booleans")
-@Examples({
-		"set yaml value \"test1.test2\" from \"config\" to \"test3\"",
-		"set yaml list \"list.name\" from \"config\" to {_list::*}",
-		" ",
-		"set {_test} to yaml value \"test1.test2\" from \"config\"",
-		"broadcast \"%{_test}%\""
-})
+@Description("Gets, sets, removes values/nodes etc.. of a cached yaml file"
+		+ "\n  - Requires the id used/created from the load effect" + "\n  - This expression does not save to file"
+		+ "\n  - Lists accept list variables for input"
+		+ "\n  - Using 'without string checks' optional is a tiny bit faster but doesn't check/convert strings for numbers or booleans")
+@Examples({ "set yaml value \"test1.test2\" from \"config\" to \"test3\"",
+		"set yaml list \"list.name\" from \"config\" to {_list::*}", " ",
+		"set {_test} to yaml value \"test1.test2\" from \"config\"", "broadcast \"%{_test}%\"" })
 @Since("1.0.0")
 public class ExprYaml<T> extends SimpleExpressionFork<T> {
 
@@ -63,18 +59,16 @@ public class ExprYaml<T> extends SimpleExpressionFork<T> {
 	}
 
 	YAMLProcessor config;
-	
+
 	private YamlState state;
 
 	private final ExprYaml<?> source;
 	private final Class<T> superType;
 
-	@SuppressWarnings("unchecked")
 	public ExprYaml() {
 		this(null, (Class<? extends T>) Object.class);
 	}
 
-	@SuppressWarnings("unchecked")
 	private ExprYaml(ExprYaml<?> source, Class<? extends T>... types) {
 		this.source = source;
 		if (source != null) {
@@ -85,7 +79,7 @@ public class ExprYaml<T> extends SimpleExpressionFork<T> {
 		}
 		this.superType = (Class<T>) Utils.getSuperType(types);
 	}
-	
+
 	@Override
 	public <R> Expression<? extends R> getConvertedExpression(Class<R>... to) {
 		return new ExprYaml<>(this, to);
@@ -95,13 +89,12 @@ public class ExprYaml<T> extends SimpleExpressionFork<T> {
 	public Expression<?> getSource() {
 		return source == null ? this : source;
 	}
-	
+
 	@Override
 	public Class<? extends T> getReturnType() {
 		return getReturnType(state);
 	}
 
-	@SuppressWarnings("unchecked")
 	public Class<? extends T> getReturnType(YamlState state) {
 		if (state == YamlState.NODES || state == YamlState.NODE_KEYS)
 			return (Class<? extends T>) String.class;
@@ -127,7 +120,8 @@ public class ExprYaml<T> extends SimpleExpressionFork<T> {
 
 	@Override
 	public String toString(@Nullable Event event, boolean b) {
-		return "yaml " + state.toString().toLowerCase() + " " + this.node.toString(event, b) + " from " + this.file.toString(event, b) + (!checks ? "" : " without string checks");
+		return "yaml " + state.toString().toLowerCase() + " " + this.node.toString(event, b) + " from "
+				+ this.file.toString(event, b) + (!checks ? "" : " without string checks");
 	}
 
 	@Override
@@ -144,10 +138,9 @@ public class ExprYaml<T> extends SimpleExpressionFork<T> {
 		return get(event, path, this.state);
 	}
 
-	@SuppressWarnings("unchecked")
 	public T[] get(Event event, String path, YamlState state) {
 		final String name = this.file.getSingle(event);
-		//final String path = this.node.getSingle(event);
+		// final String path = this.node.getSingle(event);
 		if (!SkriptYaml.YAML_STORE.containsKey(name)) {
 			SkriptYaml.warn("No yaml by the name '" + name + "' has been loaded");
 			return null;
@@ -199,7 +192,6 @@ public class ExprYaml<T> extends SimpleExpressionFork<T> {
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
 	public final static <T> T[] lazyConvert(Object[] original) {
 		try {
 			return convertArray(original, (Class<T>) String.class);
@@ -208,7 +200,6 @@ public class ExprYaml<T> extends SimpleExpressionFork<T> {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public final static <T> T[] convertToArray(Object original, Class<T> to) throws ClassCastException {
 		T[] end = (T[]) Array.newInstance(to, 1);
 		T converted = Converters.convert(original, to);
@@ -220,8 +211,8 @@ public class ExprYaml<T> extends SimpleExpressionFork<T> {
 		return end;
 	}
 
-	//This method is found at ch.njol.util.coll.CollectionUtils but is here for backwards compatibility with older Skript versions
-	@SuppressWarnings("unchecked")
+	// This method is found at ch.njol.util.coll.CollectionUtils but is here for
+	// backwards compatibility with older Skript versions
 	public final static <T> T[] convertArray(Object[] original, Class<T> to) throws ClassCastException {
 		T[] end = (T[]) Array.newInstance(to, original.length);
 		for (int i = 0; i < original.length; i++) {
@@ -258,16 +249,16 @@ public class ExprYaml<T> extends SimpleExpressionFork<T> {
 		} else if (state == YamlState.NODE_KEYS) {
 			if (mode == ChangeMode.ADD)
 				config.setProperty(path + (delta[0] == null ? "" : "." + delta[0]), null);
-				//config.addNode(path + (delta[0] == null ? "" : "." + delta[0]));
+			// config.addNode(path + (delta[0] == null ? "" : "." + delta[0]));
 			else if (mode == ChangeMode.REMOVE)
 				config.removeProperty(path + (delta[0] == null ? "" : "." + delta[0]));
-				//config.setProperty(path + (delta[0] == null ? "" : "." + delta[0]), null);
+			// config.setProperty(path + (delta[0] == null ? "" : "." + delta[0]), null);
 		} else if (state == YamlState.LIST) {
 			List<Object> objects = config.getList(path);
 			if (mode == ChangeMode.ADD) {
 				if (objects == null)
 					config.setProperty(path, arrayToList(new LinkedList<Object>(), delta));
-				else 
+				else
 					config.setProperty(path, arrayToList(objects, delta));
 			} else if (mode == ChangeMode.REMOVE) {
 				for (Object o : delta)
@@ -301,7 +292,7 @@ public class ExprYaml<T> extends SimpleExpressionFork<T> {
 //TODO force people to use 'without string checks' syntax or add conversion
 //					return new BigInteger(s);
 				}
-				
+
 			} else if (s.matches("(-)?\\d+(\\.\\d+)")) {
 				return Double.parseDouble(s);
 			} else {
@@ -311,135 +302,55 @@ public class ExprYaml<T> extends SimpleExpressionFork<T> {
 		return delta;
 	}
 
-/*TODO	Test for speed later
-	private Object parseString(Object delta) {
-		if (matchedPattern == 0 && String.class.isAssignableFrom(delta.getClass())) {
-			String s = ((String) delta);
-			if (isBoolean(s)) {
-				return parseBoolean(s);
-			} else if (isLong(s)) {
-				return Long.parseLong(s);
-			} else if (isDouble(s)) {
-				return Double.parseDouble(s);
-			} else {
-				return s;
-			}
-		}
-		return delta;
-	}
-	
-	public static boolean isBoolean(String s) {
-        return ((s != null) && (s.equalsIgnoreCase("true") || s.equalsIgnoreCase("yes") || s.equalsIgnoreCase("on") ||
-        		s.equalsIgnoreCase("false") || s.equalsIgnoreCase("no") || s.equalsIgnoreCase("off")));
-    }
-	
-	public static boolean parseBoolean(String s) {
-        return ((s != null) && (s.equalsIgnoreCase("true") || s.equalsIgnoreCase("yes") || s.equalsIgnoreCase("on")));
-    }
-	
-	private static final int NUMBER_MAX_LENGTH = String.valueOf(Long.MAX_VALUE).length();
-
-	public static boolean isLong(String string) {
-	    if (string == null || string.isEmpty()) {
-	        return false;
-	    }
-	    if (string.length() >= NUMBER_MAX_LENGTH) {
-	        try {
-	            Long.parseLong(string);
-	        } catch (Exception e) {
-	            return false;
-	        }
-	    } else {
-	        int i = 0;
-	        if (string.charAt(0) == '-') {
-	            if (string.length() > 1) {
-	                i++;
-	            } else {
-	                return false;
-	            }
-	        }
-	        for (; i < string.length(); i++) {
-	            if (!Character.isDigit(string.charAt(i))) {
-	                return false;
-	            }
-	        }
-	    }
-	    return true;
-	}
-
-	public static boolean isInteger(String str) {
-	    if (str == null) {
-	        return false;
-	    }
-	    int length = str.length();
-	    if (length == 0) {
-	        return false;
-	    }
-	    int i = 0;
-	    if (str.charAt(0) == '-') {
-	        if (length == 1) {
-	            return false;
-	        }
-	        i = 1;
-	    }
-	    for (; i < length; i++) {
-	        char c = str.charAt(i);
-	        if (c < '0' || c > '9') {
-	            return false;
-	        }
-	    }
-	    return true;
-	}
-	
-	boolean isNumber(String str) {
-	    for (int i=0; i<str.length(); i++) {
-	        char c = str.charAt(i);
-	        if (c < 0x30 || (c >= 0x3a && c <= 0x40) || (c > 0x5a && c <= 0x60) || c > 0x7a)
-	            return false;
-	    }
-
-	    return true;
-	}
-
-	public static boolean isDouble(String str) {
-	    if (str == null) {
-	        return false;
-	    }
-	    int length = str.length();
-	    if (length == 0) {
-	        return false;
-	    }
-	    int i = 0;
-	    if (str.charAt(0) == '-') {
-	        if (length == 1) {
-	            return false;
-	        }
-	        ++i;
-	    }
-	    int integerPartSize = 0;
-	    int exponentPartSize = -1;
-	    while (i < length) {
-	        char c = str.charAt(i);
-	        if (c < '0' || c > '9') {
-	            if (c == '.' && integerPartSize > 0 && exponentPartSize == -1) {
-	                exponentPartSize = 0;
-	            } else {
-	                return false;
-	            }
-	        } else if (exponentPartSize > -1) {
-	            ++exponentPartSize;
-	        } else {
-	            ++integerPartSize;
-	        }
-	        ++i;
-	    }
-	    if ((str.charAt(0) == '0' && i > 1 && exponentPartSize < 1)
-	            || exponentPartSize == 0 || (str.charAt(length - 1) == '.')) {
-	        return false;
-	    }
-	    return true;
-	}
-*/
+	/*
+	 * TODO Test for speed later private Object parseString(Object delta) { if
+	 * (matchedPattern == 0 && String.class.isAssignableFrom(delta.getClass())) {
+	 * String s = ((String) delta); if (isBoolean(s)) { return parseBoolean(s); }
+	 * else if (isLong(s)) { return Long.parseLong(s); } else if (isDouble(s)) {
+	 * return Double.parseDouble(s); } else { return s; } } return delta; }
+	 * 
+	 * public static boolean isBoolean(String s) { return ((s != null) &&
+	 * (s.equalsIgnoreCase("true") || s.equalsIgnoreCase("yes") ||
+	 * s.equalsIgnoreCase("on") || s.equalsIgnoreCase("false") ||
+	 * s.equalsIgnoreCase("no") || s.equalsIgnoreCase("off"))); }
+	 * 
+	 * public static boolean parseBoolean(String s) { return ((s != null) &&
+	 * (s.equalsIgnoreCase("true") || s.equalsIgnoreCase("yes") ||
+	 * s.equalsIgnoreCase("on"))); }
+	 * 
+	 * private static final int NUMBER_MAX_LENGTH =
+	 * String.valueOf(Long.MAX_VALUE).length();
+	 * 
+	 * public static boolean isLong(String string) { if (string == null ||
+	 * string.isEmpty()) { return false; } if (string.length() >= NUMBER_MAX_LENGTH)
+	 * { try { Long.parseLong(string); } catch (Exception e) { return false; } }
+	 * else { int i = 0; if (string.charAt(0) == '-') { if (string.length() > 1) {
+	 * i++; } else { return false; } } for (; i < string.length(); i++) { if
+	 * (!Character.isDigit(string.charAt(i))) { return false; } } } return true; }
+	 * 
+	 * public static boolean isInteger(String str) { if (str == null) { return
+	 * false; } int length = str.length(); if (length == 0) { return false; } int i
+	 * = 0; if (str.charAt(0) == '-') { if (length == 1) { return false; } i = 1; }
+	 * for (; i < length; i++) { char c = str.charAt(i); if (c < '0' || c > '9') {
+	 * return false; } } return true; }
+	 * 
+	 * boolean isNumber(String str) { for (int i=0; i<str.length(); i++) { char c =
+	 * str.charAt(i); if (c < 0x30 || (c >= 0x3a && c <= 0x40) || (c > 0x5a && c <=
+	 * 0x60) || c > 0x7a) return false; }
+	 * 
+	 * return true; }
+	 * 
+	 * public static boolean isDouble(String str) { if (str == null) { return false;
+	 * } int length = str.length(); if (length == 0) { return false; } int i = 0; if
+	 * (str.charAt(0) == '-') { if (length == 1) { return false; } ++i; } int
+	 * integerPartSize = 0; int exponentPartSize = -1; while (i < length) { char c =
+	 * str.charAt(i); if (c < '0' || c > '9') { if (c == '.' && integerPartSize > 0
+	 * && exponentPartSize == -1) { exponentPartSize = 0; } else { return false; } }
+	 * else if (exponentPartSize > -1) { ++exponentPartSize; } else {
+	 * ++integerPartSize; } ++i; } if ((str.charAt(0) == '0' && i > 1 &&
+	 * exponentPartSize < 1) || exponentPartSize == 0 || (str.charAt(length - 1) ==
+	 * '.')) { return false; } return true; }
+	 */
 	@Override
 	public Class<?>[] acceptChange(final Changer.ChangeMode mode) {
 		if (mode == Changer.ChangeMode.DELETE || mode == Changer.ChangeMode.RESET) {
@@ -458,7 +369,6 @@ public class ExprYaml<T> extends SimpleExpressionFork<T> {
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public boolean init(Expression<?>[] e, int matchedPattern, Kleenean isDelayed, ParseResult parse) {
 		if (parse.mark == 1)
@@ -483,13 +393,13 @@ public class ExprYaml<T> extends SimpleExpressionFork<T> {
 				|| s.equalsIgnoreCase("node") || s.equalsIgnoreCase("key") || s.toLowerCase().startsWith("subnodekey"));
 	}
 
-	private boolean isInLoop() {
+	public boolean isInLoop() {
 		Node node = SkriptLogger.getNode();
 		if (node == null) {
 			return false;
 		}
 		String key = node.getKey();
-		//int ln = node.getLine();
+		// int ln = node.getLine();
 		if (key == null) {
 			return false;
 		}
